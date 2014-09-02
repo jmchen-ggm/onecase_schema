@@ -14,7 +14,7 @@ import com.onecase.sdk.Util;
  **/
 public class Log {
 	
-	private static final String TAG = "Jmchen.SDK.Log";
+	private static final String TAG = "OneCase.SDK.Log";
 
 	public static final int LEVEL_VERBOSE = 0;
 	public static final int LEVEL_DEBUG = 1;

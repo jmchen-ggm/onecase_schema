@@ -9,7 +9,7 @@ import java.util.ArrayList;
  * @author jiaminchen, [jiaminchen@tencent.com]
  **/
 public class TimeLogImpl implements ITimeLog {
-	private final static String TAG = "Jmchen.TimeLogImpl";
+	private final static String TAG = "OneCase.TimeLogImpl";
 	private ArrayList<TimeLogItem> logItemList = new ArrayList<TimeLogItem>();
 	
 	@Override
