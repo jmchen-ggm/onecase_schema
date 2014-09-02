@@ -10,6 +10,11 @@ public class BaseConfig {
 	
 	public static int BUILD_STATUS = BUILD_STATUS_DEBUG;
 	
+	/**
+	 * Thread of worker, It will exist in application all the time
+	 */
+	public static int MAX_TASK_RUNNER_THREADS = 10;
+	
 	public static boolean isDebug() {
 		return BUILD_STATUS == BUILD_STATUS_DEBUG;
 	}
