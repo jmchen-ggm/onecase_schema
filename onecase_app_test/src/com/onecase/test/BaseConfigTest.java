@@ -1,5 +1,5 @@
 // Copyright 2014 By jiaminchen, [jmchen.ggm@gmail.com]
-package com.onecase.test.sdk;
+package com.onecase.test;
 
 import junit.framework.Assert;
 import android.test.AndroidTestCase;

@@ -18,7 +18,7 @@ import com.onecase.sdk.log.Log;
  * @author jiaminchen, [jiaminchen@tencent.com]
  **/
 public class BaseEventPool implements IEventPool {
-	private final static String TAG = "OneCase.BaseEventPool";
+	private final static String TAG = "Onecase.BaseEventPool";
 	private final HashMap<String, LinkedList<BaseEventListener>> listenersMap
 		= new HashMap<String, LinkedList<BaseEventListener>>();
 	

@@ -18,7 +18,7 @@ import com.onecase.sdk.log.Log;
  **/
 class TaskRunnerImpl implements ThreadIdleListener, ITaskRunner {
 	private final static int MAX_THREAD_COUNT = BaseConfig.MAX_TASK_RUNNER_THREADS;
-	private final static String TAG = "OneCase.TaskRunnerImpl";
+	private final static String TAG = "Onecase.TaskRunnerImpl";
 	
 	private HashMap<Long, OCHandler> threadMap;
 	private HashSet<Long> runningThreadSet;
@@ -30,8 +30,9 @@ class TaskRunnerImpl implements ThreadIdleListener, ITaskRunner {
 			Thread t = new Thread(TAG + " THUMB DECODE") {
 				public void run() {
 					Looper.prepare();
-					OCHandler handler = new OCHandler(Looper.myLooper());
-					threadMap.put(getId(), handler);
+					OCHandler ocHandler = new OCHandler(Looper.myLooper());
+					ocHandler.setThreadId(getId());
+					threadMap.put(getId(), ocHandler);
 					Looper.loop();
 				};
 			};
