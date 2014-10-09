@@ -22,6 +22,14 @@ public class Util {
 		}
 	}
 	
+	public final static String notNullToString(Object obj) {
+		if (obj != null) {
+			return obj.toString();
+		} else {
+			return "null";
+		}
+	}
+	
 	public static JMStack getStack() {
 		return new JMStack();
 	}

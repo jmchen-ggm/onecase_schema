@@ -9,6 +9,7 @@ import android.util.Log;
  * @author jiaminchen, [jiaminchen@tencent.com]
  **/
 public class OCHandler extends Handler {
+	private final static OCHandler UI_HANDLER = new OCHandler(Looper.getMainLooper());
 	private final static String TAG = "Onecase.OCHandler";
 	private Long threadId;
 	
@@ -38,5 +39,9 @@ public class OCHandler extends Handler {
 	
 	public Long getThreadId() {
 		return threadId;
+	}
+	
+	public static OCHandler getUIHandler() {
+		return UI_HANDLER;
 	}
 }
