@@ -55,7 +55,7 @@ public class DataLayerService extends WearableListenerService {
 
     @Override
     public void onDataChanged(DataEventBuffer dataEvents) {
-    	Log.d(TAG, "onDataChanged: %s", dataEvents.toString());
+    	Log.d(TAG, "onDataChanged(): %s", dataEvents.toString());
         final List<DataEvent> events = FreezableUtils.freezeIterable(dataEvents);
         dataEvents.close();
         if(!googleApiClient.isConnected()) {

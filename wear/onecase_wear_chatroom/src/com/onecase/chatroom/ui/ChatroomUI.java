@@ -26,7 +26,7 @@ import com.onecase.sdk.log.Log;
 public class ChatroomUI extends Activity implements ConnectionCallbacks,
 		OnConnectionFailedListener, DataApi.DataListener,
 		MessageApi.MessageListener, NodeApi.NodeListener {
-	private final static String TAG = "Onecase.ChatroomUI";
+	private final static String TAG = "Onecase.Wear.ChatroomUI";
 
 	private GoogleApiClient googleApiClient;
 
@@ -48,6 +48,9 @@ public class ChatroomUI extends Activity implements ConnectionCallbacks,
 	protected void onPause() {
 		super.onPause();
 		if (googleApiClient != null) {
+			Wearable.DataApi.removeListener(googleApiClient, this);
+	        Wearable.MessageApi.removeListener(googleApiClient, this);
+	        Wearable.NodeApi.removeListener(googleApiClient, this);
 			googleApiClient.disconnect();
 		}
 	}

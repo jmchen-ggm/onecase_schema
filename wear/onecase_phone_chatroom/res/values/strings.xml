@@ -1,5 +1,5 @@
 <resources>
 
     <string name="app_name">onecase_phone_chatroom</string>
-
+	<string name="start_wear_activity">StartWearActivity</string>
 </resources>
