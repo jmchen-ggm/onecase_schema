@@ -40,7 +40,7 @@ import com.onecase.sdk.log.Log;
  * Listens to DataItems and Messages from the local node.
  */
 public class DataLayerService extends WearableListenerService {
-    private static final String TAG = "Onecase.DataLayerService";
+    private static final String TAG = "Onecase.Wear.DataLayerService";
     private static final String START_ACTIVITY_PATH = "/start-activity";
     private static final String DATA_ITEM_RECEIVED_PATH = "/data-item-received";
     private GoogleApiClient googleApiClient;
@@ -90,6 +90,7 @@ public class DataLayerService extends WearableListenerService {
         // Check to see if the message is to start an activity
         if (messageEvent.getPath().equals(START_ACTIVITY_PATH)) {
             Intent startIntent = new Intent(this, ChatroomUI.class);
+            startIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(startIntent);
         }
