@@ -47,10 +47,18 @@ public class DataLayerService extends WearableListenerService {
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.i(TAG, "Create DataLayerService");
         googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
                 .build();
         googleApiClient.connect();
+    }
+    
+    @Override
+    public void onDestroy() {
+    	Log.i(TAG, "Destory DataLayerService");
+    	googleApiClient.disconnect();
+    	super.onDestroy();
     }
 
     @Override

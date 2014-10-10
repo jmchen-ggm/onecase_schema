@@ -5,6 +5,8 @@
 
     <uses-feature android:name="android.hardware.type.watch" />
 
+    <uses-permission android:name="android.permission.BODY_SENSORS" />
+
     <uses-sdk
         android:minSdkVersion="20"
         android:targetSdkVersion="20" />
@@ -27,9 +29,12 @@
         <activity
             android:name=".ui.ChatroomUI"
             android:label="@string/app_name" >
+        </activity>
+        <activity
+            android:name=".ui.HeartRateUI"
+            android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
