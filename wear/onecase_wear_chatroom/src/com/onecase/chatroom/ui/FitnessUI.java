@@ -12,7 +12,11 @@ import android.support.wearable.view.WatchViewStub;
 import android.widget.TextView;
 
 import com.onecase.chatroom.R;
+import com.onecase.chatroom.event.SendDataEvent;
+import com.onecase.chatroom.model.FitnessData;
+import com.onecase.chatroom.util.ChatroomConstants;
 import com.onecase.sdk.Util;
+import com.onecase.sdk.event.EventCenter;
 import com.onecase.sdk.log.Log;
 
 /**
@@ -20,9 +24,10 @@ import com.onecase.sdk.log.Log;
  **/
 public class FitnessUI extends Activity implements SensorEventListener {
 
-	private final static String TAG	= "Onecase.Wear.HeartRateUI";
+	private final static String TAG	= "Onecase.Wear.FitnessUI";
 	
 	// UI Elements
+	boolean isUIReady;
 	private CircledImageView circledImageView;
 	private TextView heartRateTV;
 	private TextView stepCountTV;
@@ -31,11 +36,14 @@ public class FitnessUI extends Activity implements SensorEventListener {
 	private Sensor heartRateSensor;
 	private Sensor stepCountSensor;
 	private SensorManager sensorManager;
+	
+	private int heartRate;
+	private int stepCount;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.i(TAG, "Create HeartRateUI");
+		Log.i(TAG, "Create FitnessUI");
 		setContentView(R.layout.fitness_ui);
 
 		// View
@@ -47,6 +55,8 @@ public class FitnessUI extends Activity implements SensorEventListener {
 						.findViewById(R.id.circle);
 				heartRateTV = (TextView) stub.findViewById(R.id.heart_rate_tv);
 				stepCountTV = (TextView) stub.findViewById(R.id.step_count_tv);
+				isUIReady = true;
+				updateUI();
 			}
 		});
 		
@@ -79,23 +89,45 @@ public class FitnessUI extends Activity implements SensorEventListener {
 		// Update your data. This check is very raw. You should improve it when
 		// the sensor is unable to calculate the heart rate
 		if (event.sensor.getType() == Sensor.TYPE_HEART_RATE) {
-			if ((int) event.values[0] > 0) {
-				circledImageView.setCircleColor(getResources().getColor(
-						R.color.green));
-				heartRateTV.setText("" + (int) event.values[0]);
+			if ((int) event.values[0] > 0 && event.accuracy >= 2) {
+				heartRate = (int) event.values[0];
 			}
+			Log.d(TAG, "HeartRate value=%s | accuracy=%d | Name=%s", Util.notNullToString(event.values[0]), event.accuracy,
+					event.sensor.getName());
+			updateUI();
 		} else if (event.sensor.getType() == Sensor.TYPE_STEP_COUNTER) {
-			if ((int) event.values[0] > 0) {
-				circledImageView.setCircleColor(getResources().getColor(
-						R.color.green));
-				stepCountTV.setText("" + (int) event.values[0]);
+			if ((int) event.values[0] > 0 && event.accuracy >= 2) {
+				stepCount = (int) event.values[0];
 			}
+			Log.d(TAG, "StepCount value=%s | accuracy=%d | Name=%s", Util.notNullToString(event.values[0]), event.accuracy,
+					event.sensor.getName());
+			updateUI();
+			sendFitnessData();
 		}
-		Log.d(TAG, "onSensorChanged(): %s", Util.notNullToString(event));
 	}
 
 	@Override
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {
 		Log.d(TAG, "onAccuracyChanged(), sensor: %s, accuracy: %d", Util.notNullToString(sensor), accuracy);
+	}
+	
+	private void updateUI() {
+		if (!isUIReady) {
+			return;
+		}
+		circledImageView.setCircleColor(getResources().getColor(
+				R.color.green));
+		heartRateTV.setText("" + heartRate);
+		stepCountTV.setText("" + stepCount);
+	}
+	
+	private void sendFitnessData() {
+		FitnessData fitnessData = new FitnessData();
+		fitnessData.heartRate = heartRate;
+		fitnessData.stepCount = stepCount;
+		SendDataEvent sendDataEvent = new SendDataEvent();
+		sendDataEvent.path = ChatroomConstants.DataLayer.FITNESS_PATH;
+		sendDataEvent.data = Util.toJSONString(fitnessData).getBytes();
+		EventCenter.getEventPool().publish(sendDataEvent);
 	}
 }

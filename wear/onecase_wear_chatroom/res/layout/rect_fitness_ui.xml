@@ -7,7 +7,7 @@
     tools:context=".ui.FitnessUI"
     tools:deviceIds="wear_rect" >
 
-    <android.support.wearable.view.CircledImageView
+     <android.support.wearable.view.CircledImageView
         android:id="@+id/circle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -15,14 +15,28 @@
         app:circle_color="@color/light_grey"
         app:circle_radius="50dp" >
 
-        <TextView
-            android:id="@+id/value"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="wait...."
-            android:textColor="@color/black"
-            android:textSize="20sp" />
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/heart_rate_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:textColor="@color/black"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/step_count_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:textColor="@color/black"
+                android:textSize="20sp" />
+        </LinearLayout>
     </android.support.wearable.view.CircledImageView>
 
 </RelativeLayout>

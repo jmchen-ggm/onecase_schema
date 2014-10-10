@@ -48,8 +48,8 @@ public class BaseEventPool implements IEventPool {
 
 	@Override
 	public boolean hasListenerForEvent(BaseEvent baseEvent) {
-		Log.v(TAG, "hasListenerForEvent id = %s", baseEvent.id);
-		return listenersMap.containsKey(baseEvent.id);
+		Log.v(TAG, "hasListenerForEvent id = %s", baseEvent.getId());
+		return listenersMap.containsKey(baseEvent.getId());
 	}
 
 	@Override
@@ -61,8 +61,8 @@ public class BaseEventPool implements IEventPool {
 	@Override
 	public boolean containsListenerForEvent(BaseEvent baseEvent,
 			BaseEventListener baseEventListener) {
-		Log.v(TAG, "containsListenerForEvent id = %s", baseEvent.id);
-		LinkedList<BaseEventListener> container = listenersMap.get(baseEvent.id);
+		Log.v(TAG, "containsListenerForEvent id = %s", baseEvent.getId());
+		LinkedList<BaseEventListener> container = listenersMap.get(baseEvent.getId());
 		if (container == null) {
 			return false;
 		} else {

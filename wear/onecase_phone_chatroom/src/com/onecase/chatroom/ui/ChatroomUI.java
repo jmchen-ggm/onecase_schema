@@ -2,10 +2,7 @@
 package com.onecase.chatroom.ui;
 
 import java.util.HashSet;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 import android.app.Activity;
 import android.content.IntentSender;
@@ -20,11 +17,14 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.data.FreezableUtils;
 import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataApi.DataItemResult;
+import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.MessageApi.SendMessageResult;
+import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
@@ -56,7 +56,8 @@ public class ChatroomUI extends Activity implements DataApi.DataListener,
 
 	private OCHandler sendMsgHandler;
 	
-	private Button startWearBtn;
+	private Button startChatroomBtn;
+	private Button startFitnessBtn;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -70,12 +71,21 @@ public class ChatroomUI extends Activity implements DataApi.DataListener,
 	}
 	
 	private void initView() {
-		startWearBtn = (Button) findViewById(R.id.start_wear_btn);
-		startWearBtn.setOnClickListener(new OnClickListener() {
+		startChatroomBtn = (Button) findViewById(R.id.start_chatroom_btn);
+		startChatroomBtn.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				if (sendMsgHandler != null) {
-					sendMsgHandler.post(new StartWearActivityTask());
+					sendMsgHandler.post(new StartWearActivityTask(ChatroomConstants.StartActivity.START_CHATROOM_PATH));
+				}
+			}
+		});
+		startFitnessBtn = (Button) findViewById(R.id.start_fitness_btn);
+		startFitnessBtn.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if (sendMsgHandler != null) {
+					sendMsgHandler.post(new StartWearActivityTask(ChatroomConstants.StartActivity.START_FITNESS_PATH));
 				}
 			}
 		});
@@ -188,7 +198,23 @@ public class ChatroomUI extends Activity implements DataApi.DataListener,
 
 	@Override
 	public void onDataChanged(DataEventBuffer dataEventBuffer) {
-		Log.d(TAG, "onDataChanged(): %s", Util.notNullToString(dataEventBuffer));
+		final List<DataEvent> events = FreezableUtils.freezeIterable(dataEventBuffer);
+		dataEventBuffer.close();
+        for (DataEvent event : events) {
+            if (event.getType() == DataEvent.TYPE_CHANGED) {
+                String path = event.getDataItem().getUri().getPath();
+                if (path.equals(ChatroomConstants.DataLayer.FITNESS_PATH)) {
+                	DataMapItem dataMapItem = DataMapItem.fromDataItem(event.getDataItem());
+                	String dataString = new String(dataMapItem.getDataMap().getByteArray(ChatroomConstants.DataLayer.KEY_DATA));
+                	Log.d(TAG, "dataString=%s", dataString);
+                }
+                Log.d(TAG, "onDataChanged(): path=%s", path);
+            } else if (event.getType() == DataEvent.TYPE_DELETED) {
+            	Log.d(TAG, "DataItem Deleted: %s", event.getDataItem().toString());
+            } else {
+            	Log.w(TAG, "Unknown data event type=%d", event.getType());
+            }
+        }
 	}
 
 	private class HeartBitTask implements Runnable {
@@ -197,8 +223,6 @@ public class ChatroomUI extends Activity implements DataApi.DataListener,
 		public void run() {
 			PutDataMapRequest putDataMapRequest = PutDataMapRequest
 					.create(ChatroomConstants.DataLayer.COUNT_PATH);
-			putDataMapRequest.getDataMap().putInt(
-					ChatroomConstants.DataLayer.COUNT_KEY, count++);
 			PutDataRequest request = putDataMapRequest.asPutDataRequest();
 
 			Log.d(TAG, "Generating DataItem: %s", Util.notNullToString(request));
@@ -229,6 +253,12 @@ public class ChatroomUI extends Activity implements DataApi.DataListener,
 	}
 	
 	private class StartWearActivityTask implements Runnable {
+		private String path;
+		
+		public StartWearActivityTask(String path) {
+			this.path = path;
+		}
+		
 		@Override
 		public void run() {
 			HashSet<String> results = new HashSet<String>();
@@ -241,7 +271,7 @@ public class ChatroomUI extends Activity implements DataApi.DataListener,
 
 	        for (String node : results) {
 	        	 Wearable.MessageApi.sendMessage(
-	                     googleApiClient, node, ChatroomConstants.DataLayer.START_ACTIVITY_PATH, new byte[0]).setResultCallback(
+	                     googleApiClient, node, path, new byte[0]).setResultCallback(
 	                     new ResultCallback<SendMessageResult>() {
 	                         @Override
 	                         public void onResult(SendMessageResult sendMessageResult) {

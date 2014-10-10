@@ -1,6 +1,11 @@
 // Copyright 2014 By jiaminchen, [jmchen.ggm@gmail.com]
 package com.onecase.sdk;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.alibaba.fastjson.JSON;
+
 /**
  * @author jiaminchen, [jmchen.ggm@gmail.com]
  **/
@@ -64,6 +69,37 @@ public class Util {
 			}
 			return t.toString();
 		}
-
+	}
+	
+	public static String toJSONString(Object obj) {
+		if (obj == null) {
+			return "{}";
+		} else {
+			return JSON.toJSONString(obj);
+		}
+	}
+	
+	public static <T> T toJSONObject(String text, Class<T> clazz) {
+		if (text == null) {
+			try {
+				return clazz.newInstance();
+			} catch (Exception e) {
+				return null;
+			}
+		} else {
+			return JSON.parseObject(text, clazz);
+		}
+	}
+	
+	public static <T> List<T> toJSONArray(String text, Class<T> clazz) {
+		if (text == null) {
+			try {
+				return new ArrayList<T>();
+			} catch (Exception e) {
+				return null;
+			}
+		} else {
+			return JSON.parseArray(text, clazz);
+		}
 	}
 }
