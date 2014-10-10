@@ -12,34 +12,47 @@ import android.support.wearable.view.WatchViewStub;
 import android.widget.TextView;
 
 import com.onecase.chatroom.R;
+import com.onecase.sdk.Util;
+import com.onecase.sdk.log.Log;
 
 /**
  * @author jiaminchen, [jiaminchen@tencent.com]
  **/
-public class HeartRateUI extends Activity implements SensorEventListener {
+public class FitnessUI extends Activity implements SensorEventListener {
 
+	private final static String TAG	= "Onecase.Wear.HeartRateUI";
+	
 	// UI Elements
 	private CircledImageView circledImageView;
-	private TextView textView;
+	private TextView heartRateTV;
+	private TextView stepCountTV;
 
+	// Sensor
 	private Sensor heartRateSensor;
+	private Sensor stepCountSensor;
 	private SensorManager sensorManager;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.heart_rate_ui);
+		Log.i(TAG, "Create HeartRateUI");
+		setContentView(R.layout.fitness_ui);
 
 		// View
-		final WatchViewStub stub = (WatchViewStub) findViewById(R.id.heart_rate_ui_wvs);
+		final WatchViewStub stub = (WatchViewStub) findViewById(R.id.fitness_ui_wvs);
 		stub.setOnLayoutInflatedListener(new WatchViewStub.OnLayoutInflatedListener() {
 			@Override
 			public void onLayoutInflated(WatchViewStub stub) {
 				circledImageView = (CircledImageView) stub
 						.findViewById(R.id.circle);
-				textView = (TextView) stub.findViewById(R.id.value);
+				heartRateTV = (TextView) stub.findViewById(R.id.heart_rate_tv);
+				stepCountTV = (TextView) stub.findViewById(R.id.step_count_tv);
 			}
 		});
+		
+		sensorManager = ((SensorManager)getSystemService(SENSOR_SERVICE));
+		heartRateSensor = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
+		stepCountSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
 	}
 
 	@Override
@@ -47,8 +60,8 @@ public class HeartRateUI extends Activity implements SensorEventListener {
 		super.onResume();
 		// Register the listener
 		if (sensorManager != null) {
-			sensorManager.registerListener(this, heartRateSensor,
-					SensorManager.SENSOR_DELAY_NORMAL);
+			sensorManager.registerListener(this, heartRateSensor, SensorManager.SENSOR_DELAY_NORMAL);
+			sensorManager.registerListener(this, stepCountSensor, SensorManager.SENSOR_DELAY_NORMAL);
 		}
 	}
 
@@ -56,8 +69,9 @@ public class HeartRateUI extends Activity implements SensorEventListener {
 	protected void onPause() {
 		super.onPause();
 		// Unregister the listener
-		if (sensorManager != null)
+		if (sensorManager != null) {
 			sensorManager.unregisterListener(this);
+		}
 	}
 
 	@Override
@@ -68,13 +82,20 @@ public class HeartRateUI extends Activity implements SensorEventListener {
 			if ((int) event.values[0] > 0) {
 				circledImageView.setCircleColor(getResources().getColor(
 						R.color.green));
-				textView.setText("" + (int) event.values[0]);
+				heartRateTV.setText("" + (int) event.values[0]);
+			}
+		} else if (event.sensor.getType() == Sensor.TYPE_STEP_COUNTER) {
+			if ((int) event.values[0] > 0) {
+				circledImageView.setCircleColor(getResources().getColor(
+						R.color.green));
+				stepCountTV.setText("" + (int) event.values[0]);
 			}
 		}
+		Log.d(TAG, "onSensorChanged(): %s", Util.notNullToString(event));
 	}
 
 	@Override
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
+		Log.d(TAG, "onAccuracyChanged(), sensor: %s, accuracy: %d", Util.notNullToString(sensor), accuracy);
 	}
 }

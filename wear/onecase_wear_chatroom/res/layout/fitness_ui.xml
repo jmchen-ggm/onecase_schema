@@ -2,12 +2,12 @@
 <android.support.wearable.view.WatchViewStub xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/heart_rate_ui_wvs"
+    android:id="@+id/fitness_ui_wvs"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:rectLayout="@layout/rect_heart_rate_ui"
-    app:roundLayout="@layout/round_heart_rate_ui"
-    tools:context=".ui.HeartRateUI"
+    app:rectLayout="@layout/rect_fitness_ui"
+    app:roundLayout="@layout/round_fitness_ui"
+    tools:context=".ui.FitnessUI"
     tools:deviceIds="wear" >
 
 </android.support.wearable.view.WatchViewStub>
