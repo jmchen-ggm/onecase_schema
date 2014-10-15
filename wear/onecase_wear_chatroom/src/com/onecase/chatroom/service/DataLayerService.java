@@ -19,9 +19,13 @@ package com.onecase.chatroom.service;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Looper;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -29,6 +33,7 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.data.FreezableUtils;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
+import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.PutDataMapRequest;
@@ -36,9 +41,12 @@ import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 import com.google.android.gms.wearable.DataApi.DataItemResult;
+import com.onecase.chatroom.R;
 import com.onecase.chatroom.event.SendDataEvent;
+import com.onecase.chatroom.model.NotificationData;
 import com.onecase.chatroom.ui.ChatroomUI;
 import com.onecase.chatroom.ui.FitnessUI;
+import com.onecase.chatroom.ui.MessageListUI;
 import com.onecase.chatroom.util.ChatroomConstants;
 import com.onecase.sdk.Util;
 import com.onecase.sdk.event.BaseEvent;
@@ -68,6 +76,7 @@ public class DataLayerService extends WearableListenerService {
 		};
 		t.setPriority(Thread.MIN_PRIORITY);
 		t.start();
+		while(sendDataHandler == null);
 	}
 
 	private void stopSendThread() {
@@ -101,36 +110,69 @@ public class DataLayerService extends WearableListenerService {
 	@Override
 	public void onDataChanged(DataEventBuffer dataEvents) {
 		Log.d(TAG, "onDataChanged(): %s", dataEvents.toString());
-		final List<DataEvent> events = FreezableUtils
-				.freezeIterable(dataEvents);
-		dataEvents.close();
-		if (!googleApiClient.isConnected()) {
-			ConnectionResult connectionResult = googleApiClient
-					.blockingConnect(30, TimeUnit.SECONDS);
-			if (!connectionResult.isSuccess()) {
-				Log.e(TAG,
-						"DataLayerListenerService failed to connect to GoogleApiClient.");
-				return;
-			}
-		}
+		final List<DataEvent> events = FreezableUtils.freezeIterable(dataEvents);
+        dataEvents.close();
+        if(!googleApiClient.isConnected()) {
+            ConnectionResult connectionResult = googleApiClient
+                    .blockingConnect(30, TimeUnit.SECONDS);
+            if (!connectionResult.isSuccess()) {
+                Log.e(TAG, "DataLayerListenerService failed to connect to GoogleApiClient.");
+                return;
+            }
+        }
 
-		// Loop through the events and send a message back to the node that
-		// created the data item.
-		for (DataEvent event : events) {
+        // Loop through the events and send a message back to the node that created the data item.
+        for (DataEvent event : events) {
+        	Log.d(TAG, "event: %s", Util.notNullToString(event));
+        	handleDataEvent(event);
+        }
+	}
+	
+	private void handleDataEvent(DataEvent event) {
+		String path = event.getDataItem().getUri().getPath();
+		Log.d(TAG, "handleDataEvent path=%s", path);
+		if (path.equals(ChatroomConstants.DataLayer.HEART_BIT_PATH)) {
 			Uri uri = event.getDataItem().getUri();
-			String path = uri.getPath();
-			if (ChatroomConstants.DataLayer.COUNT_PATH.equals(path)) {
-				// Get the node id of the node that created the data item from
-				// the host portion of
-				// the uri.
-				String nodeId = uri.getHost();
-				// Set the data of the message to be the bytes of the Uri.
-				byte[] payload = uri.toString().getBytes();
-				// Send the rpc
-				Wearable.MessageApi.sendMessage(googleApiClient, nodeId,
-						DATA_ITEM_RECEIVED_PATH, payload);
+			String nodeId = uri.getHost();
+			byte[] payload = uri.toString().getBytes();
+			if (sendDataHandler != null) {
+				sendDataHandler.post(new SendMessageTask(nodeId, payload));
 			}
+		} else if (path.startsWith(ChatroomConstants.DataLayer.DATA_PHAT_PREFIX)) {
+			DataMapItem dataMapItem = DataMapItem.fromDataItem(event.getDataItem());
+        	String dataString = new String(dataMapItem.getDataMap().getByteArray(ChatroomConstants.DataLayer.KEY_DATA));
+        	Log.d(TAG, "handleDataEvent dataString=%s", dataString);
+        	if (path.equals(ChatroomConstants.DataLayer.NOTIFICATION_PATH)) {
+        		NotificationData notificationData = Util.toJSONObject(dataString, NotificationData.class);
+        		notify(notificationData);
+        	}
 		}
+	}
+	
+	private void notify(NotificationData notificationData) {
+		int notificationId = 001;
+        Intent firstPageIntent = new Intent(this, FitnessUI.class);
+        PendingIntent firstPagePendingIntent = PendingIntent.getActivity(this, 0, firstPageIntent, 0);
+        NotificationCompat.Builder firstPageBuilder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.ic_launcher)
+                .setContentTitle(notificationData.title)
+                .setContentText(notificationData.content)
+                .setContentIntent(firstPagePendingIntent).setLocalOnly(true);
+        
+        Intent secondPageIntent = new Intent(this, MessageListUI.class);
+        PendingIntent secondPagePendingIntent = PendingIntent.getActivity(this, 0, secondPageIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+		Notification secondPageNotification = new NotificationCompat.Builder(
+				this).extend(new NotificationCompat.WearableExtender().setDisplayIntent(
+						secondPagePendingIntent).setCustomSizePreset(
+						Notification.WearableExtender.SIZE_MEDIUM))
+						.build();
+		Notification notification = new NotificationCompat.WearableExtender()
+				.addPage(secondPageNotification).extend(firstPageBuilder)
+				.build();
+
+        NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
+        notificationManagerCompat.notify(notificationId++, notification);
 	}
 
 	@Override
@@ -207,5 +249,23 @@ public class DataLayerService extends WearableListenerService {
 						}
 					});
 		}
+	}
+	
+	private class SendMessageTask implements Runnable {
+		
+		private String nodeId;
+		private byte[] payload; 
+
+		public SendMessageTask(String nodeId, byte[] payload) {
+			this.nodeId = nodeId;
+			this.payload = payload;
+		}
+		
+		@Override
+		public void run() {
+			Wearable.MessageApi.sendMessage(googleApiClient, nodeId,
+					DATA_ITEM_RECEIVED_PATH, payload);			
+		}
+		
 	}
 }
